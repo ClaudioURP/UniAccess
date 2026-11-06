@@ -68,3 +68,4 @@ Sistema de Gestión y Reserva de Ambientes Deportivos del CESPAR (Universidad Ri
 * **`selectHorasReservadasPorMi(ambienteId, fecha)`**: Selector derivado que calcula las horas bloqueadas para un ambiente y fecha dados.
 * **`selectProximaReserva`**: Selector derivado que obtiene la reserva activa más próxima cronológicamente para mostrarla en el Inicio.
 * **`selectEstadisticas`**: Selector derivado que calcula el total de reservas activas, historial, canceladas y horas totales reservadas (usado en Inicio, Perfil y badges).
+
