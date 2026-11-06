@@ -3,11 +3,12 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, Switch, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, fontSize, fontWeight, radius, spacing, shadows } from '../../theme';
 import { useSesion } from '../../context/SesionContext';
-import { useReservas } from '../../context/ReservasContext';
+import { selectEstadisticas } from '../../store/reservasSlice';
 import { HORARIO_ATENCION_CESPAR, REGLAMENTO_CESPAR } from '../../data/usuario';
 import ContenedorPantalla from '../../components/ContenedorPantalla';
 import EncabezadoPantalla from '../../components/EncabezadoPantalla';
@@ -17,7 +18,7 @@ import InsigniaEstado from '../../components/InsigniaEstado';
 
 export default function PantallaPerfil() {
   const { usuario, cerrarSesion } = useSesion();
-  const { estadisticas } = useReservas();
+  const estadisticas = useSelector(selectEstadisticas);
 
   const [notificaciones, setNotificaciones] = useState(true);
   const [recordatorios, setRecordatorios] = useState(true);

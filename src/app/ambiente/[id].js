@@ -4,14 +4,15 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, fontSize, fontWeight, radius, spacing, shadows } from '../../theme';
-import { useReservas } from '../../context/ReservasContext';
+import { selectReservas } from '../../store/reservasSlice';
 import { obtenerAmbiente, obtenerCategoria } from '../../data/ambientes';
 import { bloquesDelDia } from '../../utils/disponibilidad';
 import { generarDias, formatearFechaLarga, rangoHorario, hoyISO } from '../../utils/fechas';
-import { requiereAprobacion } from '../../utils/reservas';
+import { requiereAprobacion, estadoEfectivo } from '../../utils/reservas';
 import ImagenAmbiente from '../../components/ImagenAmbiente';
 import BotonIcono from '../../components/BotonIcono';
 import InsigniaEstado from '../../components/InsigniaEstado';
@@ -27,7 +28,20 @@ const MAX_BLOQUES_POR_RESERVA = 4;
 
 export default function PantallaAmbiente() {
   const { id } = useLocalSearchParams();
-  const { horasReservadasPorMi } = useReservas();
+  const reservas = useSelector(selectReservas);
+
+  const horasReservadasPorMi = (ambienteId, fechaConsulta) => {
+    const conjunto = new Set();
+    reservas
+      .filter(
+        (r) =>
+          r.ambienteId === ambienteId &&
+          r.fecha === fechaConsulta &&
+          estadoEfectivo(r) !== 'cancelada',
+      )
+      .forEach((r) => r.horas.forEach((h) => conjunto.add(h)));
+    return conjunto;
+  };
 
   const ambiente = obtenerAmbiente(id);
   const dias = useMemo(() => generarDias(14), []);

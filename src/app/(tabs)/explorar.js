@@ -3,9 +3,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useSelector } from 'react-redux';
 
 import { colors, fontSize, fontWeight, spacing } from '../../theme';
-import { useReservas } from '../../context/ReservasContext';
+import { selectReservas } from '../../store/reservasSlice';
+import { estadoEfectivo } from '../../utils/reservas';
 import {
   AMBIENTES,
   CATEGORIAS,
@@ -27,7 +29,20 @@ const ORDEN_ESTADO = { disponible: 0, ocupado: 1, mantenimiento: 2 };
 
 export default function PantallaExplorar() {
   const { categoria: categoriaParam } = useLocalSearchParams();
-  const { horasReservadasPorMi } = useReservas();
+  const reservas = useSelector(selectReservas);
+
+  const horasReservadasPorMi = (ambienteId, fecha) => {
+    const conjunto = new Set();
+    reservas
+      .filter(
+        (r) =>
+          r.ambienteId === ambienteId &&
+          r.fecha === fecha &&
+          estadoEfectivo(r) !== 'cancelada',
+      )
+      .forEach((r) => r.horas.forEach((h) => conjunto.add(h)));
+    return conjunto;
+  };
 
   const [texto, setTexto] = useState('');
   const [categoria, setCategoria] = useState(categoriaParam || 'todos');

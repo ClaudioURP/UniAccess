@@ -4,22 +4,18 @@ import React from 'react';
 import { Redirect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useSelector } from 'react-redux';
+
 import { colors, fontSize, fontWeight } from '../../theme';
 import { useSesion } from '../../context/SesionContext';
-import { useReservas } from '../../context/ReservasContext';
-import { estadoEfectivo } from '../../utils/reservas';
+import { selectReservasActivas } from '../../store/reservasSlice';
 
 export default function LayoutTabs() {
   const { usuario, cargando } = useSesion();
-  const { reservas } = useReservas();
+  const reservasActivas = useSelector(selectReservasActivas).length;
 
   if (cargando) return null;
   if (!usuario) return <Redirect href="/login" />;
-
-  const reservasActivas = reservas.filter((reserva) => {
-    const estado = estadoEfectivo(reserva);
-    return estado === 'confirmada' || estado === 'pendiente';
-  }).length;
 
   return (
     <Tabs

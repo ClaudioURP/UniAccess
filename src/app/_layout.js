@@ -1,19 +1,34 @@
 // src/app/_layout.js
-// Layout raíz: proveedores globales (sesión y reservas) y navegación por pila
-import React from 'react';
+// Layout raíz: Redux Store Provider, Context de Sesión y navegación de pila
+import React, { useEffect } from 'react';
+import { Provider } from 'react-redux';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { colors } from '../theme';
+import { store } from '../store';
+import { reemplazarTodas } from '../store/reservasSlice';
+import { cargarReservas, suscribirPersistencia } from '../store/persistencia';
 import { SesionProvider } from '../context/SesionContext';
-import { ReservasProvider } from '../context/ReservasContext';
+
+// Se suscribe la persistencia una sola vez fuera del componente
+suscribirPersistencia(store);
 
 export default function LayoutRaiz() {
+  useEffect(() => {
+    // Hidrata el store desde AsyncStorage al iniciar la aplicación
+    cargarReservas().then((items) => {
+      if (items && Array.isArray(items) && items.length > 0) {
+        store.dispatch(reemplazarTodas(items));
+      }
+    });
+  }, []);
+
   return (
-    <SafeAreaProvider>
-      <SesionProvider>
-        <ReservasProvider>
+    <Provider store={store}>
+      <SafeAreaProvider>
+        <SesionProvider>
           <StatusBar style="dark" />
           <Stack
             screenOptions={{
@@ -29,8 +44,8 @@ export default function LayoutRaiz() {
             <Stack.Screen name="reserva/[id]" />
             <Stack.Screen name="catalogo" />
           </Stack>
-        </ReservasProvider>
-      </SesionProvider>
-    </SafeAreaProvider>
+        </SesionProvider>
+      </SafeAreaProvider>
+    </Provider>
   );
 }

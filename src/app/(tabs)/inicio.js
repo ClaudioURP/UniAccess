@@ -3,11 +3,12 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, fontSize, fontWeight, radius, spacing, shadows } from '../../theme';
 import { useSesion } from '../../context/SesionContext';
-import { useReservas } from '../../context/ReservasContext';
+import { selectProximaReserva, selectEstadisticas } from '../../store/reservasSlice';
 import { AMBIENTES, CATEGORIAS, obtenerAmbiente, contarAmbientesPorCategoria } from '../../data/ambientes';
 import { HORARIO_ATENCION_CESPAR } from '../../data/usuario';
 import { estadoAmbiente } from '../../utils/disponibilidad';
@@ -41,7 +42,8 @@ const PASOS = [
 
 export default function PantallaInicio() {
   const { usuario } = useSesion();
-  const { proximaReserva, estadisticas } = useReservas();
+  const proximaReserva = useSelector(selectProximaReserva);
+  const estadisticas = useSelector(selectEstadisticas);
 
   const conteos = contarAmbientesPorCategoria();
   const categoriasVisibles = CATEGORIAS.filter((categoria) => categoria.id !== 'todos');

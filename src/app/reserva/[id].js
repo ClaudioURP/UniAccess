@@ -3,11 +3,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
 import QRCode from 'react-native-qrcode-svg';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, fontSize, fontWeight, radius, spacing, shadows } from '../../theme';
-import { useReservas } from '../../context/ReservasContext';
+import { selectReservaPorId, cancelarReserva, eliminarReserva } from '../../store/reservasSlice';
 import { obtenerAmbiente, obtenerCategoria } from '../../data/ambientes';
 import { REGLAMENTO_CESPAR } from '../../data/usuario';
 import { formatearFechaLarga, rangoHorario } from '../../utils/fechas';
@@ -23,9 +24,8 @@ import ElementoInfo from '../../components/ElementoInfo';
 
 export default function PantallaComprobante() {
   const { id } = useLocalSearchParams();
-  const { obtenerReserva, cancelarReserva } = useReservas();
-
-  const reserva = obtenerReserva(id);
+  const dispatch = useDispatch();
+  const reserva = useSelector(selectReservaPorId(id));
 
   if (!reserva) {
     return (
@@ -66,9 +66,27 @@ export default function PantallaComprobante() {
         {
           text: 'Sí, cancelar',
           style: 'destructive',
-          onPress: async () => {
-            await cancelarReserva(reserva.id, 'Cancelada por el estudiante');
+          onPress: () => {
+            dispatch(cancelarReserva({ id: reserva.id, motivo: 'Cancelada por el estudiante' }));
             Alert.alert('Reserva cancelada', 'El bloque quedó liberado para otros estudiantes.');
+          },
+        },
+      ],
+    );
+  };
+
+  const confirmarEliminacion = () => {
+    Alert.alert(
+      'Eliminar comprobante',
+      '¿Deseas eliminar este registro de tu lista permanentemente?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => {
+            dispatch(eliminarReserva(reserva.id));
+            router.replace('/reservas');
           },
         },
       ],
@@ -199,12 +217,20 @@ export default function PantallaComprobante() {
         </View>
       </View>
 
-      {activa && (
+      {activa ? (
         <BotonPrincipal
           texto="Cancelar esta reserva"
           icono="close-circle-outline"
           variante="borde"
           onPress={confirmarCancelacion}
+          style={styles.accion}
+        />
+      ) : (
+        <BotonPrincipal
+          texto="Eliminar del historial"
+          icono="trash-outline"
+          variante="borde"
+          onPress={confirmarEliminacion}
           style={styles.accion}
         />
       )}

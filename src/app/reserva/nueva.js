@@ -3,10 +3,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { colors, fontSize, fontWeight, radius, spacing, shadows } from '../../theme';
-import { useReservas } from '../../context/ReservasContext';
 import { useSesion } from '../../context/SesionContext';
+import { agregarReserva, selectEstadisticas } from '../../store/reservasSlice';
 import { obtenerAmbiente, obtenerCategoria } from '../../data/ambientes';
 import { formatearFechaLarga, rangoHorario, ordenarHoras } from '../../utils/fechas';
 import { requiereAprobacion, MAX_RESERVAS_ACTIVAS } from '../../utils/reservas';
@@ -23,7 +24,8 @@ import EstadoVacio from '../../components/EstadoVacio';
 
 export default function PantallaNuevaReserva() {
   const { ambienteId, fecha, horas } = useLocalSearchParams();
-  const { crearReserva, estadisticas } = useReservas();
+  const dispatch = useDispatch();
+  const estadisticas = useSelector(selectEstadisticas);
   const { usuario } = useSesion();
 
   const ambiente = obtenerAmbiente(ambienteId);
@@ -59,17 +61,20 @@ export default function PantallaNuevaReserva() {
   const limiteAlcanzado = estadisticas.activas >= MAX_RESERVAS_ACTIVAS;
   const esperaAprobacion = requiereAprobacion(ambiente);
 
-  const confirmar = async () => {
+  const confirmar = () => {
     setEnviando(true);
-    const reserva = await crearReserva({
+    const accion = agregarReserva({
       ambienteId: ambiente.id,
       fecha,
       horas: listaHoras,
       personas,
       observaciones,
+      tarifaPorHora: ambiente.tarifaPorHora,
+      requiereAprobacion: esperaAprobacion,
     });
+    dispatch(accion);
     setEnviando(false);
-    router.replace(`/reserva/${reserva.id}`);
+    router.replace(`/reserva/${accion.payload.id}`);
   };
 
   return (

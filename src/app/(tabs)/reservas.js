@@ -3,9 +3,14 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { colors, fontSize, fontWeight, spacing } from '../../theme';
-import { useReservas } from '../../context/ReservasContext';
+import {
+  selectReservas,
+  selectEstadisticas,
+  cancelarReserva,
+} from '../../store/reservasSlice';
 import { obtenerAmbiente } from '../../data/ambientes';
 import { horaAMinutos } from '../../utils/fechas';
 import { estadoEfectivo, estaActiva } from '../../utils/reservas';
@@ -25,7 +30,9 @@ const ORDEN_DESC = (a, b) => (a.fecha === b.fecha ? horaAMinutos(b.horas[0]) - h
 const ORDEN_ASC = (a, b) => (a.fecha === b.fecha ? horaAMinutos(a.horas[0]) - horaAMinutos(b.horas[0]) : a.fecha < b.fecha ? -1 : 1);
 
 export default function PantallaReservas() {
-  const { reservas, cancelarReserva, estadisticas } = useReservas();
+  const dispatch = useDispatch();
+  const reservas = useSelector(selectReservas);
+  const estadisticas = useSelector(selectEstadisticas);
   const [filtro, setFiltro] = useState('proximas');
 
   const grupos = useMemo(
@@ -49,8 +56,8 @@ export default function PantallaReservas() {
         {
           text: 'Sí, cancelar',
           style: 'destructive',
-          onPress: async () => {
-            await cancelarReserva(reserva.id, 'Cancelada por el estudiante');
+          onPress: () => {
+            dispatch(cancelarReserva({ id: reserva.id, motivo: 'Cancelada por el estudiante' }));
             Alert.alert('Reserva cancelada', 'Tu reserva fue anulada correctamente.');
           },
         },

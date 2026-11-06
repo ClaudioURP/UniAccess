@@ -61,7 +61,7 @@ export function SesionProvider({ children }) {
   };
 
   const valor = useMemo(
-    () => ({ usuario, cargando, iniciarSesion, cerrarSesion }),
+    () => ({ usuario, cargando, estaLogueado: usuario !== null, iniciarSesion, cerrarSesion }),
     [usuario, cargando],
   );
 
