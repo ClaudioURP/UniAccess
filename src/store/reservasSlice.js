@@ -1,6 +1,6 @@
 // src/store/reservasSlice.js
 // Slice de Redux Toolkit para la entidad principal: Reservas del CESPAR URP
-import { createSlice, nanoid } from '@reduxjs/toolkit';
+import { createSlice, nanoid, createSelector } from '@reduxjs/toolkit';
 import { aISO, sumarDias, horaAMinutos } from '../utils/fechas';
 import { estadoEfectivo, estaActiva } from '../utils/reservas';
 
@@ -145,9 +145,11 @@ export const selectReservas = (state) => state.reservas.items;
 export const selectReservaPorId = (id) => (state) =>
   state.reservas.items.find((r) => r.id === id) || null;
 
-// Selector derivado: reservas activas (confirmadas o pendientes)
-export const selectReservasActivas = (state) =>
-  state.reservas.items.filter(estaActiva);
+// Selector derivado memoizado: reservas activas (confirmadas o pendientes)
+export const selectReservasActivas = createSelector(
+  [selectReservas],
+  (items) => items.filter(estaActiva),
+);
 
 // Selector derivado: horas reservadas por mí para un ambiente y fecha
 export const selectHorasReservadasPorMi = (ambienteId, fecha) => (state) => {
@@ -165,34 +167,38 @@ export const selectHorasReservadasPorMi = (ambienteId, fecha) => (state) => {
   return conjunto;
 };
 
-// Selector derivado: próxima reserva activa
-export const selectProximaReserva = (state) => {
-  const activas = state.reservas.items.filter(estaActiva);
-  if (activas.length === 0) return null;
+// Selector derivado memoizado: próxima reserva activa
+export const selectProximaReserva = createSelector(
+  [selectReservasActivas],
+  (activas) => {
+    if (activas.length === 0) return null;
 
-  return [...activas].sort((a, b) => {
-    if (a.fecha !== b.fecha) return a.fecha.localeCompare(b.fecha);
-    return horaAMinutos(a.horas[0]) - horaAMinutos(b.horas[0]);
-  })[0];
-};
+    return [...activas].sort((a, b) => {
+      if (a.fecha !== b.fecha) return a.fecha.localeCompare(b.fecha);
+      return horaAMinutos(a.horas[0]) - horaAMinutos(b.horas[0]);
+    })[0];
+  },
+);
 
-// Selector derivado: estadísticas globales (activas, horas, historial, etc.)
-export const selectEstadisticas = (state) => {
-  const items = state.reservas.items;
-  const activas = items.filter(estaActiva);
-  const historial = items.filter((r) => estadoEfectivo(r) === 'finalizada');
-  const canceladas = items.filter((r) => estadoEfectivo(r) === 'cancelada');
+// Selector derivado memoizado: estadísticas globales (activas, horas, historial, etc.)
+export const selectEstadisticas = createSelector(
+  [selectReservas],
+  (items) => {
+    const activas = items.filter(estaActiva);
+    const historial = items.filter((r) => estadoEfectivo(r) === 'finalizada');
+    const canceladas = items.filter((r) => estadoEfectivo(r) === 'cancelada');
 
-  const horasReservadas = activas.reduce((total, r) => total + r.horas.length, 0);
+    const horasReservadas = activas.reduce((total, r) => total + r.horas.length, 0);
 
-  return {
-    total: items.length,
-    activas: activas.length,
-    historial: historial.length,
-    canceladas: canceladas.length,
-    horasReservadas,
-  };
-};
+    return {
+      total: items.length,
+      activas: activas.length,
+      historial: historial.length,
+      canceladas: canceladas.length,
+      horasReservadas,
+    };
+  },
+);
 
 export default reservasSlice.reducer;
 
